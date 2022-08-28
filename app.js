@@ -49,7 +49,7 @@ app.get('/', (req, res) => {
 
 
 // App Port
-const port = process.env.PORT || 4000
+const port = process.env.APP_PORT || 5000
 app.listen(port, () => {
     dbConnection()
     console.log(`App running on ${port} port`)

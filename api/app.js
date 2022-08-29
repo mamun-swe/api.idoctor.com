@@ -5,9 +5,7 @@ const cors = require("cors")
 const morgan = require("morgan")
 const bodyParser = require("body-parser")
 const fileUpload = require('express-fileupload')
-const { AppErrorHandeller } = require('./api/middleware/error-handeller')
-const { dbConnection } = require('./api/config/db.config')
-
+const { AppErrorHandeller } = require('./middleware/error-handeller')
 
 const app = express()
 app.use(morgan('dev'))
@@ -20,12 +18,12 @@ app.use('/uploads/doctor/profiles', express.static('uploads/doctor/profiles/'))
 app.use('/uploads/patient/profiles', express.static('uploads/patient/profiles/'))
 
 // Main Routes
-const authRoute = require('./api/routes/auth')
-const doctorRoute = require('./api/routes/doctor')
-const patientRoute = require('./api/routes/patient')
-const chatRoute = require('./api/routes/chat')
-const adminRoute = require('./api/routes/admin')
-const clientRoute = require('./api/routes/client')
+const authRoute = require('./routes/auth')
+const doctorRoute = require('./routes/doctor')
+const patientRoute = require('./routes/patient')
+const chatRoute = require('./routes/chat')
+const adminRoute = require('./routes/admin')
+const clientRoute = require('./routes/client')
 
 // API URL's
 app.use('/api/v1/auth', authRoute)
@@ -48,9 +46,4 @@ app.get('/', (req, res) => {
 })
 
 
-// App Port
-const port = process.env.APP_PORT || 5000
-app.listen(port, () => {
-    dbConnection()
-    console.log(`App running on ${port} port`)
-})
+module.exports = { app }

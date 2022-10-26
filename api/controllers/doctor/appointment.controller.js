@@ -48,17 +48,14 @@ const approveRequest = async (req, res, next) => {
     const { day, startTime } = req.body;
 
     await CheckId(id);
-    await Appointment.findByIdAndUpdate(
-      { _id: id },
-      {
-        $set: {
-          schedule: { day: day, startTime: startTime },
-          status: "approved",
-        },
-      }
-    );
+    await Appointment.findByIdAndUpdate(id, {
+      $set: {
+        schedule: { day: day, startTime: startTime },
+        status: "approved",
+      },
+    });
 
-    return res.status(200).json({
+    res.status(200).json({
       status: true,
       message: "Appointment accepted.",
     });

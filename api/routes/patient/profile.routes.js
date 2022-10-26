@@ -1,7 +1,8 @@
 const profileRoutes = require("express").Router();
-const profileController = require("../../controllers/doctor/profile.controller");
+const profileController = require("../../controllers/patient/profile.controller");
 
 profileRoutes.get("/", profileController.me);
-profileRoutes.put("/", profileController.update);
+profileRoutes.put("/", profileController.updateBio);
+profileRoutes.put("/update-photo", profileController.updatePhoto);
 
 module.exports = { profileRoutes };

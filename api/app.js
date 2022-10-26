@@ -20,6 +20,10 @@ app.use(
   express.static("uploads/patient/profiles/")
 );
 
+app.get("/", (req, res) => {
+  res.send("Hello I am node.js application");
+});
+
 // API URL's
 app.use("/api/v1", routers);
 
@@ -30,9 +34,5 @@ app.use((req, res, next) => {
 });
 
 app.use(AppErrorHandeller);
-
-app.get("/", (req, res) => {
-  res.send("Hello I am node.js application");
-});
 
 module.exports = { app };

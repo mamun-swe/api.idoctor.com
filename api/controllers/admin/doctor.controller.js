@@ -1,5 +1,4 @@
 const Doctor = require("../../../models/Doctor");
-const hostURL = require("../../utils/url");
 const checkId = require("../../middleware/CheckId");
 const {
   httpSuccessResponse,
@@ -9,21 +8,10 @@ const {
 // Index of doctors
 const Index = async (req, res, next) => {
   try {
-    let results = await Doctor.find(
+    const results = await Doctor.find(
       {},
       { name: 1, specialist: 1, image: 1, isApproved: 1 }
     ).sort({ _id: -1 });
-
-    // Modifiy image path
-    if (results && results.length > 0) {
-      await results.map((doctor) => {
-        if (doctor.image) {
-          doctor.image = hostURL(req) + "uploads/" + doctor.image;
-        } else {
-          doctor.image = null;
-        }
-      });
-    }
 
     res.status(200).json(
       await httpSuccessResponse({
@@ -47,7 +35,7 @@ const Show = async (req, res, next) => {
     await checkId(id);
 
     // Find doctor
-    let doctor = await Doctor.findById(id, {
+    const doctor = await Doctor.findById(id, {
       access_token: 0,
       password: 0,
       role: 0,
@@ -55,10 +43,6 @@ const Show = async (req, res, next) => {
     })
       .populate("councilHour", "schedule")
       .exec();
-
-    if (doctor && doctor.image) {
-      doctor.image = hostURL(req) + "uploads/" + doctor.image;
-    }
 
     res.status(200).json(
       await httpSuccessResponse({

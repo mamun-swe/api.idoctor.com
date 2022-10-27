@@ -1,3 +1,4 @@
+const fs = require("fs");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Mongoose = require("mongoose");
@@ -57,6 +58,16 @@ const httpSuccessResponse = async ({ status, message, data, token }) => {
   return { ...responstType };
 };
 
+/* Remove resource from directory */
+const removeFile = async (path) => {
+  return fs.unlinkSync(path);
+};
+
+/* Parse filename from URL */
+const parseFilename = async (url) => {
+  return url.split("/")[7].split(".")[0];
+};
+
 module.exports = {
   getJwtAccessToken,
   verifyJwtAccessToken,
@@ -66,4 +77,6 @@ module.exports = {
   validEmail,
   httpErrorResponse,
   httpSuccessResponse,
+  removeFile,
+  parseFilename,
 };

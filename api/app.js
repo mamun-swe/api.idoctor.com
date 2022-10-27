@@ -9,10 +9,10 @@ const { routers } = require("./routes");
 
 const app = express();
 app.use(morgan("dev"));
-app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(fileUpload({ useTempFiles: true }));
 app.use(cors());
-app.use(fileUpload());
 
 app.use("/uploads", express.static("uploads/"));
 

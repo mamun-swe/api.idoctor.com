@@ -1,9 +1,5 @@
 const Doctor = require("../../../models/Doctor");
 const Council = require("../../../models/Council");
-const Upload = require("../../services/FileUpload");
-const Unlink = require("../../services/FileDelete");
-const CheckId = require("../../middleware/CheckId");
-const hostURL = require("../../utils/url");
 const {
   httpSuccessResponse,
   httpErrorResponse,
@@ -14,13 +10,9 @@ const me = async (req, res, next) => {
     const { id } = req.user;
 
     // Find account using account id and role
-    let account = await Doctor.findById(id, { access_token: 0, password: 0 })
+    const account = await Doctor.findById(id, { access_token: 0, password: 0 })
       .populate("councilHour")
       .exec();
-
-    if (account && account.image) {
-      account.image = hostURL(req) + "uploads/" + account.image;
-    }
 
     res.status(200).json(
       await httpSuccessResponse({
@@ -57,8 +49,6 @@ const update = async (req, res, next) => {
       startTime,
       endTime,
     } = req.body;
-
-    await CheckId(id);
 
     // Find Profile
     const availableAccount = await Doctor.findById(id);

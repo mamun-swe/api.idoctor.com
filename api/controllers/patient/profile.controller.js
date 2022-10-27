@@ -1,11 +1,9 @@
 const Patient = require("../../../models/Patient");
-const Upload = require("../../services/FileUpload");
-const Unlink = require("../../services/FileDelete");
-const publicURL = require("../../utils/url");
 const {
   httpSuccessResponse,
   httpErrorResponse,
 } = require("../../utils/helper");
+const { uploadFile, destroyFile } = require("../../services/file.service");
 
 // Me
 const me = async (req, res, next) => {
@@ -13,14 +11,10 @@ const me = async (req, res, next) => {
     const { id } = req.user;
 
     /* Find account */
-    let result = await Patient.findById(id, {
+    const result = await Patient.findById(id, {
       access_token: 0,
       password: 0,
     });
-
-    if (result && result.image) {
-      result.image = publicURL(req) + "uploads/" + result.image;
-    }
 
     return res.status(200).json(
       await httpSuccessResponse({
@@ -76,7 +70,6 @@ const updateBio = async (req, res, next) => {
 // Update Profile Photo
 const updatePhoto = async (req, res, next) => {
   try {
-    let filename;
     const { id } = req.user;
 
     // Find Profile
@@ -94,11 +87,11 @@ const updatePhoto = async (req, res, next) => {
 
     // Remove Old file
     if (availableAccount.image) {
-      await Unlink.fileDelete({ file: availableAccount.image });
+      await destroyFile({ filePath: availableAccount.image });
     }
 
     // Upload file
-    filename = await Upload.fileUpload({ file: req.files.image });
+    const filename = await uploadFile({ file: req.files.image });
 
     const updateData = { image: filename };
     await Patient.findByIdAndUpdate(id, { $set: { ...updateData } });

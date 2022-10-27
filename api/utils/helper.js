@@ -5,16 +5,14 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 /* Generate JWT token */
 const getJwtAccessToken = async ({ id, name, role }) => {
-  return await jwt.sign(
-    { id, name, role },
-    { JWT_SECRET },
-    { expiresIn: "1d" }
-  );
+  return await jwt.sign({ id, name, role }, `${JWT_SECRET}`, {
+    expiresIn: "1d",
+  });
 };
 
-/* Decode JWT token */
+/* Verify JWT token */
 const verifyJwtAccessToken = async (token) => {
-  return await jwt.verify(splitToken, JWT_SECRET);
+  return await jwt.verify(token, `${JWT_SECRET}`);
 };
 
 /* Password encryption */
@@ -39,6 +37,26 @@ const validEmail = (email) => {
   return re.test(email);
 };
 
+/* HTTP error response handeller */
+const httpErrorResponse = async ({ status, errors }) => {
+  return {
+    status,
+    errors,
+  };
+};
+
+/* HTTP success response handeller */
+const httpSuccessResponse = async ({ status, message, data, token }) => {
+  let responstType = {};
+  responstType.status = status;
+  responstType.message = message;
+
+  if (data) responstType.data = data;
+  if (token) responstType.token = token;
+
+  return { ...responstType };
+};
+
 module.exports = {
   getJwtAccessToken,
   verifyJwtAccessToken,
@@ -46,4 +64,6 @@ module.exports = {
   comparePassword,
   validMongooseId,
   validEmail,
+  httpErrorResponse,
+  httpSuccessResponse,
 };

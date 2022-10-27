@@ -7,7 +7,7 @@ const { app } = require("./api/app")
 const { dbConnection } = require('./api/config/db.config')
 
 const numCPUs = cpus().length
-const PORT = process.env.APP_PORT || 5000
+const PORT = process.env.PORT || 5007
 
 if (cluster.isMaster) {
     console.log(`Primary ${process.pid} is running`)

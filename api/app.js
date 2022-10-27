@@ -14,11 +14,7 @@ app.use(bodyParser.json());
 app.use(cors());
 app.use(fileUpload());
 
-app.use("/uploads/doctor/profiles", express.static("uploads/doctor/profiles/"));
-app.use(
-  "/uploads/patient/profiles",
-  express.static("uploads/patient/profiles/")
-);
+app.use("/uploads", express.static("uploads/"));
 
 app.get("/", (req, res) => {
   res.send("Hello I am node.js application");

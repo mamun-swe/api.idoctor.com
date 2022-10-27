@@ -1,14 +1,11 @@
-const fs = require('fs')
+const fs = require("fs");
 
-const fileDelete = (destination, file) => {
-    fs.unlink(destination + file, function (err) {
-        if (err) {
-            console.error(err)
-        }
-        return
-    });
-}
+const fileDelete = async ({ file }) => {
+  fs.unlink("./uploads/" + file, function (err) {
+    return;
+  });
+};
 
 module.exports = {
-    fileDelete
-}
+  fileDelete,
+};

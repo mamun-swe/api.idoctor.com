@@ -4,6 +4,10 @@ const Upload = require("../../services/FileUpload");
 const Unlink = require("../../services/FileDelete");
 const CheckId = require("../../middleware/CheckId");
 const hostURL = require("../../utils/url");
+const {
+  httpSuccessResponse,
+  httpErrorResponse,
+} = require("../../utils/helper");
 
 const me = async (req, res, next) => {
   try {
@@ -15,13 +19,16 @@ const me = async (req, res, next) => {
       .exec();
 
     if (account) {
-      account.image = hostURL(req) + "uploads/doctor/profiles/" + account.image;
+      account.image = hostURL(req) + "uploads/" + account.image;
     }
 
-    res.status(200).json({
-      status: true,
-      data: account,
-    });
+    res.status(200).json(
+      await httpSuccessResponse({
+        status: true,
+        message: "Profile information.",
+        data: account,
+      })
+    );
   } catch (error) {
     if (error) {
       console.log(error);
@@ -56,10 +63,14 @@ const update = async (req, res, next) => {
     // Find Profile
     const availableAccount = await Doctor.findById(id);
     if (!availableAccount) {
-      return res.status(404).json({
-        status: false,
-        message: "Account not found.",
-      });
+      return res.status(404).json(
+        await httpErrorResponse({
+          status: false,
+          errors: {
+            message: "Account not found.",
+          },
+        })
+      );
     }
 
     // Update doctor name & image

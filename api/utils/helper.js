@@ -50,8 +50,8 @@ const httpSuccessResponse = async ({ status, message, data, token }) => {
   let responstType = {};
   responstType.status = status;
   responstType.message = message;
+  responstType.data = data;
 
-  if (data) responstType.data = data;
   if (token) responstType.token = token;
 
   return { ...responstType };

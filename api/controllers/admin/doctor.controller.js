@@ -1,35 +1,42 @@
 const Doctor = require("../../../models/Doctor");
 const hostURL = require("../../utils/url");
 const checkId = require("../../middleware/CheckId");
+const {
+  httpSuccessResponse,
+  httpErrorResponse,
+} = require("../../utils/helper");
 
 // Index of doctors
 const Index = async (req, res, next) => {
   try {
-    let doctors = await Doctor.find(
+    let results = await Doctor.find(
       {},
       { name: 1, specialist: 1, image: 1, isApproved: 1 }
-    ).exec();
-
-    if (!doctors.length)
-      return res
-        .status(404)
-        .json({ status: false, message: "Doctors not found" });
+    );
 
     // Modifiy image path
-    await doctors.map((doctor) => {
-      if (doctor.image) {
-        doctor.image = hostURL(req) + "uploads/doctor/profiles/" + doctor.image;
-      } else {
-        doctor.image = null;
-      }
-    });
+    if (results && results.length > 0) {
+      await results.map((doctor) => {
+        if (doctor.image) {
+          doctor.image = hostURL(req) + "uploads/" + doctor.image;
+        } else {
+          doctor.image = null;
+        }
+      });
+    }
 
-    res.status(200).json({
-      status: true,
-      doctors,
-    });
+    res.status(200).json(
+      await httpSuccessResponse({
+        status: true,
+        message: "Doctros list.",
+        data: results,
+      })
+    );
   } catch (error) {
-    if (error) next(error);
+    if (error) {
+      console.log(error);
+      next(error);
+    }
   }
 };
 
@@ -40,24 +47,26 @@ const Show = async (req, res, next) => {
     await checkId(id);
 
     // Find doctor
-    let doctor = await Doctor.findById(
-      { _id: id },
-      { access_token: 0, password: 0, role: 0 }
-    )
+    let doctor = await Doctor.findById(id, {
+      access_token: 0,
+      password: 0,
+      role: 0,
+      appointments: 0,
+    })
       .populate("councilHour", "schedule")
       .exec();
 
-    if (!doctor)
-      return res
-        .status(404)
-        .json({ status: false, message: "Doctor not found" });
-
-    for (const property in doctor) {
-      if (property === "image")
-        doctor[property] =
-          hostURL(req) + "uploads/doctor/profiles/" + doctor[property];
+    if (doctor) {
+      doctor.image = hostURL(req) + "uploads/" + doctor.image;
     }
-    return res.status(200).json({ status: true, doctor });
+
+    res.status(200).json(
+      await httpSuccessResponse({
+        status: true,
+        message: "Doctor information",
+        data: doctor,
+      })
+    );
   } catch (error) {
     if (error) {
       console.log(error);
@@ -72,15 +81,32 @@ const UpdateStatus = async (req, res, next) => {
     const { id, status } = req.params;
     await checkId(id);
 
-    await Doctor.findByIdAndUpdate(
-      { _id: id },
-      { $set: { isApproved: status } },
-      { new: true }
-    ).exec();
+    /* Check available */
+    const availableAccount = await Doctor.findById(id);
+    if (!availableAccount) {
+      return res.status(404).json(
+        await httpErrorResponse({
+          status: false,
+          errors: {
+            message: "Account not found.",
+          },
+        })
+      );
+    }
 
-    res.status(201).json({ status: true, message: `Successfully ${status}` });
+    await Doctor.findByIdAndUpdate(id, { $set: { isApproved: status } });
+
+    res.status(200).json(
+      await httpSuccessResponse({
+        status: true,
+        message: "Saved changes.",
+      })
+    );
   } catch (error) {
-    if (error) next(error);
+    if (error) {
+      console.log(error);
+      next(error);
+    }
   }
 };
 

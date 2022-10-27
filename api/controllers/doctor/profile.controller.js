@@ -18,7 +18,7 @@ const me = async (req, res, next) => {
       .populate("councilHour")
       .exec();
 
-    if (account) {
+    if (account && account.image) {
       account.image = hostURL(req) + "uploads/" + account.image;
     }
 

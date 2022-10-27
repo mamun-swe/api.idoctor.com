@@ -12,7 +12,7 @@ const Index = async (req, res, next) => {
     let results = await Doctor.find(
       {},
       { name: 1, specialist: 1, image: 1, isApproved: 1 }
-    );
+    ).sort({ _id: -1 });
 
     // Modifiy image path
     if (results && results.length > 0) {
@@ -56,7 +56,7 @@ const Show = async (req, res, next) => {
       .populate("councilHour", "schedule")
       .exec();
 
-    if (doctor) {
+    if (doctor && doctor.image) {
       doctor.image = hostURL(req) + "uploads/" + doctor.image;
     }
 

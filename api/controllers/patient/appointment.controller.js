@@ -1,6 +1,11 @@
 const Doctor = require("../../../models/Doctor");
 const Patient = require("../../../models/Patient");
 const Appointment = require("../../../models/Appointment");
+const CheckId = require("../../middleware/CheckId");
+const {
+  httpSuccessResponse,
+  httpErrorResponse,
+} = require("../../utils/helper");
 
 // All appointments
 const appointments = async (req, res, next) => {
@@ -13,10 +18,12 @@ const appointments = async (req, res, next) => {
       .populate("doctor", "name")
       .exec();
 
-    res.status(200).json({
-      status: true,
-      data: results,
-    });
+    res.status(200).json(
+      await httpSuccessResponse({
+        status: true,
+        data: results,
+      })
+    );
   } catch (error) {
     if (error) {
       console.log(error);
@@ -40,6 +47,24 @@ const bookAppointment = async (req, res, next) => {
       problemShortInfo,
     } = req.body;
 
+    await CheckId(doctorId);
+
+    /* Check ailable doctor */
+    const availableDoctor = await Doctor.findOne({
+      $and: [{ _id: doctorId }, { isApproved: "approved" }],
+    });
+
+    if (!availableDoctor) {
+      return res.status(404).json(
+        await httpErrorResponse({
+          status: false,
+          errors: {
+            message: "Doctor not available.",
+          },
+        })
+      );
+    }
+
     const newAppointment = new Appointment({
       doctor: doctorId,
       patientId: id,
@@ -58,25 +83,28 @@ const bookAppointment = async (req, res, next) => {
     const createAppointment = await newAppointment.save();
 
     // Update doctor
-    await Doctor.findOneAndUpdate(
-      { _id: doctorId },
+    await Doctor.findByIdAndUpdate(
+      doctorId,
       { $push: { appointments: [createAppointment._id] } },
       { new: true }
     ).exec();
 
     // Update Patient
-    await Patient.findOneAndUpdate(
-      { _id: patientId },
+    await Patient.findByIdAndUpdate(
+      id,
       { $push: { appointmentRequests: [createAppointment._id] } },
       { new: true }
     ).exec();
 
-    res.status(200).json({
-      status: true,
-      message: "Your appointment request has been sent.",
-    });
+    res.status(200).json(
+      await httpSuccessResponse({
+        status: true,
+        message: "Your appointment request has been sent.",
+      })
+    );
   } catch (error) {
     if (error) {
+      console.log(error);
       next(error);
     }
   }

@@ -109,6 +109,10 @@ const doctorSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    allSubmitted: {
+      type: Boolean,
+      default: false,
+    },
     updateRange: {
       type: Number,
       enum: [20, 40, 60, 80, 90, 100],

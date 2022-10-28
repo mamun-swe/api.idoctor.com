@@ -244,6 +244,7 @@ const updateStepSix = async (req, res, next) => {
         updateRange: 100,
         updateStep: 6,
         councilHour: [council._id],
+        allSubmitted: true,
       },
     });
 

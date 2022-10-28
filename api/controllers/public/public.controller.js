@@ -5,7 +5,7 @@ const { httpSuccessResponse } = require("../../utils/helper");
 const doctors = async (req, res, next) => {
   try {
     let results = await Doctor.find(
-      { isApproved: "approved" },
+      { isApproved: true },
       {
         name: 1,
         image: 1,

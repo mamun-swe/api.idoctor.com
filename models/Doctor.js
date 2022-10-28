@@ -126,5 +126,4 @@ const doctorSchema = new Schema(
 );
 
 const Doctor = model("Doctor", doctorSchema);
-
 module.exports = Doctor;

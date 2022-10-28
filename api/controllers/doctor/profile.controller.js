@@ -4,6 +4,7 @@ const {
   httpSuccessResponse,
   httpErrorResponse,
 } = require("../../utils/helper");
+const { destroyFile, uploadFile } = require("../../services/file.service");
 
 const me = async (req, res, next) => {
   try {
@@ -29,26 +30,11 @@ const me = async (req, res, next) => {
   }
 };
 
-// Update Profile
-const update = async (req, res, next) => {
+// Profile update step two
+const updateStepTwo = async (req, res, next) => {
   try {
-    let filename;
     const { id } = req.user;
-    const {
-      name,
-      college,
-      passingYear,
-      specialist,
-      currentHospital,
-      country,
-      city,
-      currentAddress,
-      latitude,
-      longitude,
-      day,
-      startTime,
-      endTime,
-    } = req.body;
+    const { name } = req.body;
 
     // Find Profile
     const availableAccount = await Doctor.findById(id);
@@ -63,157 +49,223 @@ const update = async (req, res, next) => {
       );
     }
 
-    // Update doctor name & image
-    if (req.files) {
-      // Remove old file
-      if (availableAccount.image) {
-        await Unlink.fileDelete(
-          "./uploads/doctor/profiles/",
-          availableAccount.image
-        );
-      }
+    /* Delete old image */
+    if (availableAccount.image) {
+      await destroyFile({ filePath: availableAccount.image });
+    }
 
-      filename = Upload.fileUpload(
-        req.files.image,
-        "./uploads/doctor/profiles/"
-      );
+    /* Upload image */
+    const uploadedFilename = await uploadFile({ file: req.files.image });
 
-      const updateData = {
-        name: name,
-        image: filename,
-        updateRange: 40,
-        updateStep: 2,
-      };
+    const formData = {
+      name,
+      image: uploadedFilename,
+    };
 
-      const updateDoctor = await doctor
-        .updateOne({ $set: updateData }, { new: true })
-        .exec();
-
-      if (!updateDoctor) {
-        return res.status(501).json({
-          message: "Update error",
-        });
-      }
-
-      return res.status(200).json({
+    await Doctor.findByIdAndUpdate(id, {
+      $set: { ...formData, updateRange: 40, updateStep: 2 },
+    });
+    res.status(200).json(
+      await httpSuccessResponse({
         status: true,
-        message: "Successfully step one complete.",
-      });
-    } else if (college && passingYear && specialist && currentHospital) {
-      const updateData = {
-        college: college,
-        passingYear: passingYear,
-        specialist: specialist,
-        currentHospital: currentHospital,
-        updateRange: 60,
-        updateStep: 3,
-      };
+        message: "Second step completed.",
+      })
+    );
+  } catch (error) {
+    if (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+};
 
-      // Update doctor
-      const updateDoctor = await doctor
-        .updateOne({ $set: updateData }, { new: true })
-        .exec();
+// Profile update step three
+const updateStepThree = async (req, res, next) => {
+  try {
+    const { id } = req.user;
+    const { college, passingYear, specialist, currentHospital } = req.body;
 
-      if (!updateDoctor) {
-        return res.status(501).json({
-          message: "Update error",
-        });
-      }
-
-      return res.status(200).json({
-        status: true,
-        message: "Successfully step one complete.",
-      });
-    } else if (country && city && currentAddress) {
-      const updateData = {
-        country: country,
-        city: city,
-        currentAddress: currentAddress,
-      };
-
-      // Update address
-      const updateDoctor = await doctor
-        .updateOne(
-          {
-            $set: {
-              updateRange: 80,
-              updateStep: 4,
-              "location.address": updateData,
-            },
-          },
-          { new: true }
-        )
-        .exec();
-
-      if (!updateDoctor) {
-        return res.status(501).json({
-          message: "Update error",
-        });
-      }
-
-      return res.status(200).json({
-        status: true,
-        message: "Successfully step one complete.",
-      });
-    } else if (latitude && longitude) {
-      // Update location
-      const updateDoctor = await doctor
-        .updateOne(
-          {
-            $set: {
-              updateRange: 90,
-              updateStep: 5,
-              "location.coordinates": [latitude, longitude],
-            },
-          },
-          { new: true }
-        )
-        .exec();
-
-      if (!updateDoctor) {
-        return res.status(501).json({
-          message: "Update error",
-        });
-      }
-
-      return res.status(200).json({
-        status: true,
-        message: "Successfully step one complete.",
-      });
-    } else if (day && startTime && endTime) {
-      // Add new council
-      const newCouncil = new Council({
-        doctor: doctor._id,
-        schedule: { day: day, startTime: startTime, endTime: endTime },
-      });
-
-      let council = await newCouncil.save();
-
-      // set council into doctor
-      const updateDoctor = await doctor
-        .updateOne({
-          $set: {
-            updateRange: 100,
-            updateStep: 6,
-            isApproved: "submitted",
-            councilHour: [council._id],
+    // Find Profile
+    const availableAccount = await Doctor.findById(id);
+    if (!availableAccount) {
+      return res.status(404).json(
+        await httpErrorResponse({
+          status: false,
+          errors: {
+            message: "Account not found.",
           },
         })
-        .exec();
-
-      if (council && updateDoctor) {
-        return res.status(200).json({
-          status: true,
-          message: "Successfully all steps completed.",
-        });
-      }
+      );
     }
+
+    const formData = {
+      college,
+      passingYear,
+      specialist,
+      currentHospital,
+    };
+
+    await Doctor.findByIdAndUpdate(id, {
+      $set: { ...formData, updateRange: 60, updateStep: 3 },
+    });
+
+    res.status(200).json(
+      await httpSuccessResponse({
+        status: true,
+        message: "Third step completed.",
+      })
+    );
   } catch (error) {
-    if (error) next(error);
+    if (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+};
+
+// Profile update step four
+const updateStepFour = async (req, res, next) => {
+  try {
+    const { id } = req.user;
+    const { country, city, currentAddress } = req.body;
+
+    // Find Profile
+    const availableAccount = await Doctor.findById(id);
+    if (!availableAccount) {
+      return res.status(404).json(
+        await httpErrorResponse({
+          status: false,
+          errors: {
+            message: "Account not found.",
+          },
+        })
+      );
+    }
+
+    const formData = {
+      country,
+      city,
+      currentAddress,
+    };
+
+    await Doctor.findByIdAndUpdate(id, {
+      $set: {
+        updateRange: 80,
+        updateStep: 4,
+        "location.address": formData,
+      },
+    });
+
+    res.status(200).json(
+      await httpSuccessResponse({
+        status: true,
+        message: "Four step completed.",
+      })
+    );
+  } catch (error) {
+    if (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+};
+
+// Profile update step five
+const updateStepFive = async (req, res, next) => {
+  try {
+    const { id } = req.user;
+    const { latitude, longitude } = req.body;
+
+    // Find Profile
+    const availableAccount = await Doctor.findById(id);
+    if (!availableAccount) {
+      return res.status(404).json(
+        await httpErrorResponse({
+          status: false,
+          errors: {
+            message: "Account not found.",
+          },
+        })
+      );
+    }
+
+    await Doctor.findByIdAndUpdate(id, {
+      $set: {
+        updateRange: 90,
+        updateStep: 5,
+        "location.coordinates": [latitude, longitude],
+      },
+    });
+
+    res.status(200).json(
+      await httpSuccessResponse({
+        status: true,
+        message: "Step five completed.",
+      })
+    );
+  } catch (error) {
+    if (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+};
+
+// Profile update step six
+const updateStepSix = async (req, res, next) => {
+  try {
+    const { id } = req.user;
+    const { day, startTime, endTime } = req.body;
+
+    // Find Profile
+    const availableAccount = await Doctor.findById(id);
+    if (!availableAccount) {
+      return res.status(404).json(
+        await httpErrorResponse({
+          status: false,
+          errors: {
+            message: "Account not found.",
+          },
+        })
+      );
+    }
+
+    /* Create new council */
+    const newCouncil = new Council({
+      doctor: id,
+      schedule: { day: day, startTime: startTime, endTime: endTime },
+    });
+
+    const council = await newCouncil.save();
+
+    /* Update council to doctor */
+    await Doctor.findByIdAndUpdate(id, {
+      $set: {
+        updateRange: 100,
+        updateStep: 6,
+        councilHour: [council._id],
+      },
+    });
+
+    res.status(200).json(
+      await httpSuccessResponse({
+        status: true,
+        message: "Step five completed.",
+      })
+    );
+  } catch (error) {
+    if (error) {
+      console.log(error);
+      next(error);
+    }
   }
 };
 
 module.exports = {
   me,
-  update,
+  updateStepTwo,
+  updateStepThree,
+  updateStepFour,
+  updateStepFive,
+  updateStepSix,
 };

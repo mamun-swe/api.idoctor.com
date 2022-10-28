@@ -51,7 +51,7 @@ const bookAppointment = async (req, res, next) => {
 
     /* Check ailable doctor */
     const availableDoctor = await Doctor.findOne({
-      $and: [{ _id: doctorId }, { isApproved: "approved" }],
+      $and: [{ _id: doctorId }, { isApproved: true }],
     });
 
     if (!availableDoctor) {

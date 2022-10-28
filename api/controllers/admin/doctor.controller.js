@@ -62,7 +62,7 @@ const Show = async (req, res, next) => {
 // Update account status
 const UpdateStatus = async (req, res, next) => {
   try {
-    const { id, status } = req.params;
+    const { id } = req.params;
     await checkId(id);
 
     /* Check available */
@@ -78,7 +78,9 @@ const UpdateStatus = async (req, res, next) => {
       );
     }
 
-    await Doctor.findByIdAndUpdate(id, { $set: { isApproved: status } });
+    await Doctor.findByIdAndUpdate(id, {
+      $set: { isApproved: !availableAccount.isApproved },
+    });
 
     res.status(200).json(
       await httpSuccessResponse({

@@ -21,25 +21,4 @@ const store = async (req, res, next) => {
   next();
 };
 
-/* Change status validator */
-const changeDoctorStatus = async (req, res, next) => {
-  const rules = {
-    status: [
-      "required",
-      { in: ["approved", "pending", "submitted", "canceled"] },
-    ],
-  };
-
-  const validate = new Validator({ ...req.params }, rules);
-
-  if (validate.fails()) {
-    return res.status(422).json({
-      status: false,
-      errors: validate.errors.all(),
-    });
-  }
-
-  next();
-};
-
-module.exports = { store, changeDoctorStatus };
+module.exports = { store };
